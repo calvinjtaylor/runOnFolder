@@ -78,6 +78,7 @@ sub fileRead {
 sub actionConfig {
   my ($config) = @_;
   my $fn = "actionConfig";
+	my $ret = -1;
 
   my $srcPrefix = $config->{"SourceRootLocation"};
   $srcPrefix = undef unless ($srcPrefix);
@@ -119,20 +120,13 @@ sub actionConfig {
             debug ("Couldn't find destination $destinationLocation", $fn);
             `mkdir -p $destinationLocation`;
           }
-          # unless ( -d $destinationLocation) {
-          #   debug ("Couldn't create destination $destinationLocation", $fn);
-          #   next;
-          # }
           debug ("Destination exists; ".$destinationLocation, $fn);
 
-          debug ("cmd; ".$cmd, $fn);
           $cmd =~ s/\$DestinationLocations/$destinationLocation/g;
 
           debug ("calling $cmd ", $fn);
-          # debug ("Attempting to call method; ".$destinationLocation, $fn);
-          # debug ("Attempting to call method; ".$destinationLocation, $fn);
-					my $output = `$cmd`;
-					my $ret = $?;
+          my $output = `$cmd`;
+					$ret = $?;
 					debug ("returned code $ret");
 					debug ("generated output '$output'");
 					if ($ret)
@@ -146,6 +140,11 @@ sub actionConfig {
   } else {
     error ("Couldn't read SourceLocations from json file", $fn);
   }
+	if ($ret)
+	{
+		error("Failed to execute config");
+	}
+	return $ret;
 }
 
 initializeLogging();
@@ -193,6 +192,11 @@ error "Couldn't read text from configFile $configFile" unless ($fileText) ;
 debug "fileText=$fileText";
 my $json = from_json($fileText); #[, $optional_hashref]
 debug "json=".Dumper($json);
-actionConfig($json);
-debug "Complete";
-exit 0;
+
+my $ret = actionConfig($json);
+if ($ret){
+	error ("Failed to Action the configFile found at $configFile successfully.");
+}else{
+	debug "Complete";
+}
+exit $ret;

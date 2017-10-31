@@ -29,7 +29,7 @@ PrintAndLog() {
 }
 
 ErrorAndLog() {
-	Log "[ERROR] $@ "
+	Log "ERROR $@ "
 	echo "$@" >&2
 }
 

@@ -43,7 +43,7 @@ getConfigText(){
   [ -n "$OUT" ]
 }
 
-@test "test ls" {
+@test "test ls with working config file directed by relative path to dir only" {
   i=0
   configText=$(getConfigText)
 
@@ -66,38 +66,80 @@ getConfigText(){
   printf "$configText\n"
   exec 1>&33  # Restore stdout
 
-  # printf $configText > $TMP/$CONFNAME
-  # conf=$(cat $TMP/$CONFNAME)
-  # Log "conf $conf"
-  # echo "$configText" 1>&2
   Log "Calling perl $exe $TMP"
   result="$(perl $exe $TMP)"
+  retCode=$?
   Log "result=$result"
-  false
+  if [ "$retCode" -ne "0" ]; then
+    ErrorAndLog "program exited with error $retCode"
+    false
+  fi
 }
-#
-# # @test "test TestDirs set" {
-# #   [ -n "$TestDirs" ]
-# # }
-# #
-# @test "test TestFiles exist" {
-#   i=0
-#   for TestFile in ${TestFiles[@]} ; do
-#     [ -f "$TMP/$TestFile" ]
-#   done
-# }
-#
-#
-#
-# @test "full test" {
-#   p=$(pwd)
-#   testLocation="$TMP"
-#   # result="$(bash -x organizeFoldersByDate.sh -s tests/tmp/ -r -t tests/output/
-#   result="$(bash $p/$exe $testLocation)"
-#   [ ! -z "$result" ]
-#
-#   # for TestFile in ${ExpectedFiles[@]} ; do
-#   #   echo "Testing $OUT/$TestFile exists and is a file"
-#   #   [ -f "$OUT/$TestFile" ]
-#   # done
-# }
+
+@test "test ls with failing exe caused by misconfiguration in config file directed by relative path to dir only" {
+  i=0
+  configText=$(getConfigText)
+
+  srcLoc=$TMP/one
+  # [ ! -d "$srcLoc" ] && Log "Making dir $srcLoc" && mkdir -p "$srcLoc"
+  # [ -d "$srcLoc" ]
+  # touch $srcLoc/this
+  # touch $srcLoc/that
+
+  # ${string/pattern/replacement}
+  configText=${configText/\#SRL\#/} # set source location for test
+  configText=${configText/\#SL\#/$srcLoc} # set source location for test
+  configText=${configText/\#DRL\#/} # set dest location for test
+  configText=${configText/\#DL\#/$OUT} # set dest location for test
+  configText=${configText/\#EXE\#/ls  \$SourceLocations \$DestinationLocations} # set exe test
+
+  #write config text to test location
+  exec 33>&1 # Save current stdout
+  exec > $TMP/$CONFNAME
+  printf "$configText\n"
+  exec 1>&33  # Restore stdout
+
+  Log "Calling perl $exe $TMP"
+  # result=""
+  # result="$(perl $exe $TMP)"
+  if Run perl $exe $TMP; then
+    ErrorAndLog "Program exited with error $retCode"
+    true
+  else
+    false
+  fi
+}
+
+@test "test ls with working config file directed by relative path to exact config file" {
+  i=0
+  configText=$(getConfigText)
+
+  srcLoc=$TMP/one
+  [ ! -d "$srcLoc" ] && Log "Making dir $srcLoc" && mkdir -p "$srcLoc"
+  [ -d "$srcLoc" ]
+  touch $srcLoc/this
+  touch $srcLoc/that
+
+  # ${string/pattern/replacement}
+  configText=${configText/\#SRL\#/} # set source location for test
+  configText=${configText/\#SL\#/$srcLoc} # set source location for test
+  configText=${configText/\#DRL\#/} # set dest location for test
+  configText=${configText/\#DL\#/$OUT} # set dest location for test
+  configText=${configText/\#EXE\#/ls  \$SourceLocations \$DestinationLocations} # set exe test
+
+  CONFNAME="donkeyname.json"
+  #write config text to test location
+  exec 33>&1 # Save current stdout
+  exec > $TMP/$CONFNAME
+  printf "$configText\n"
+  exec 1>&33  # Restore stdout
+
+  Log "Calling perl $exe $TMP/$CONFNAME"
+  result="$(perl $exe $TMP/$CONFNAME)"
+  retCode=$?
+  Log "result=$result"
+  if [ "$retCode" -ne "0" ]; then
+    ErrorAndLog "program exited with error $retCode"
+    false
+  fi
+}
