@@ -13,6 +13,7 @@ A perl script to run complicated file syncronization.  A json file holds the con
   root_location  - the root folder inside which we may find other folders of interest.
 
   The following is my config file used to direct photo imports
+  ```json
   {
     "RootLocation": "~/myStuff",
     "RootRelativeLocations": [
@@ -22,3 +23,4 @@ A perl script to run complicated file syncronization.  A json file holds the con
     "DestinationLocation"
     "Executable": "importPhotos.sh -s $RootRelativeLocation -t $DestinationLocation"
   }
+  ```
