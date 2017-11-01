@@ -1,12 +1,12 @@
 #!/usr/bin/perl
-package Logging;
+package CalvinTaylor::Util::Logging;
+
 use strict;
 use warnings;
 use POSIX qw(strftime);
 use Exporter;
-
 use Cwd 'abs_path';
-use Carp qw/longmess cluck confess/;
+use Carp qw/longmess/;
 
 our @ISA= qw( Exporter );
 

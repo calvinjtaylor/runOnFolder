@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 #author calvin taylor coolcatt@gmail.com
-#Oct 2017
+#Nov 2017
 
 #this is a bats bash testing script run by typing 'bats tests' in the project root directory.
 
@@ -9,7 +9,7 @@
 #the program under test lets a config file be described to call a program with set of directries and destinations to be run
 # in my use case I want to run a photo importing script on several locations from my smartphone backup and have them all output into my photolibrary structure. To do this I place the folders containing photo's I want on the phone and the library location into a json config file and run it each time a phone backup completes.
 
-exe="syncFilesFromBackup.pl"
+exe="runOnDirectories.pl"
 
 load CalFuncs
 LOG=$LOGDIR/batsTestHelper.log
@@ -41,6 +41,48 @@ getConfigText(){
 
 @test "test OUT set" {
   [ -n "$OUT" ]
+}
+
+@test "test ls with working config file directed by relative path to dir source location, and sub locations" {
+  i=0
+  configText=$(getConfigText)
+
+  srcLoc=$TMP/one
+  [ ! -d "$srcLoc" ] && Log "Making dir $srcLoc" && mkdir -p "$srcLoc"
+  [ -d "$srcLoc" ]
+  touch $srcLoc/this
+  touch $srcLoc/that
+
+  #setup important dir and non important, only the important one should be shown by the ls command.
+  srcLocI=$TMP/one/important
+  srcLocN=$TMP/one/notimportant
+  mkdir -p $srcLocN $srcLocI $OUT/out
+  touch $srcLocI/this
+  touch $srcLocI/that
+  touch $srcLocN/nithisthat
+  touch $srcLocN/nithatthis
+
+  # ${string/pattern/replacement}
+  configText=${configText/\#SRL\#/$srcLoc} # set source location for test
+  configText=${configText/\#SL\#/important} # set source location for test
+  configText=${configText/\#DRL\#/$OUT} # set dest location for test
+  configText=${configText/\#DL\#/out} # set dest location for test
+  configText=${configText/\#EXE\#/ls  \$SourceLocations \$DestinationLocations} # set exe test
+
+  #write config text to test location
+  exec 33>&1 # Save current stdout
+  exec > $TMP/$CONFNAME
+  printf "$configText\n"
+  exec 1>&33  # Restore stdout
+
+  Log "Calling perl $exe $TMP"
+  result="$(perl $exe $TMP)"
+  retCode=$?
+  Log "result=$result"
+  if [ "$retCode" -ne "0" ]; then
+    ErrorAndLog "program exited with error $retCode"
+    false
+  fi
 }
 
 @test "test ls with working config file directed by relative path to dir only" {

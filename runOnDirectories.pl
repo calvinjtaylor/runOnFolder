@@ -1,28 +1,26 @@
 #!/usr/bin/perl
 # package Cal::Sync;
+
+#author calvin taylor coolcatt@gmail.com
+#Nov 2017
+
 use strict;
 use warnings;
 
 use Cwd;
 use Data::Dumper;
-use File::Copy "cp";
-use File::Basename;
-use File::Find;
-
-use Carp qw/longmess cluck confess/;
-
 use JSON; # imports encode_json, decode_json, to_json and from_json.
 
 use lib ".";
-use Logging;
+use CalvinTaylor::Util::Logging;
 
-my $defaultConfigName=".syncFilesFromBackup.json";
+my $defaultConfigName=".runOnDirectories.json";
 my $configFile = "~/$defaultConfigName";
 
 sub usage {
 	print "Usage: $0  <config file> \n";
 	print "Where:\n";
-	print "\t<config file is optional, if ommitted the default used is in ~/.syncFilesFromBackup.json\n";
+	print "\t<config file is optional, if ommitted the default used is in ~/.runOnDirectories.json\n";
 	print "-h: shows usage screen\n";
   print "";
 }
@@ -88,7 +86,6 @@ sub actionConfig {
   $dstPrefix = undef unless ($dstPrefix);
   # debug ("$dstPrefix=".Dumper($dstPrefix), $fn);
 
-
   my $sourceLocations = $config->{"SourceLocations"};
   my $destinationLocations = $config->{"DestinationLocations"};
 
@@ -127,8 +124,8 @@ sub actionConfig {
           debug ("calling $cmd ", $fn);
           my $output = `$cmd`;
 					$ret = $?;
-					debug ("returned code $ret");
-					debug ("generated output '$output'");
+					debug ("returned code: $ret");
+					debug ("generated output: \n$output");
 					if ($ret)
 					{
 						error("Command $cmd failed with output $output");
@@ -147,6 +144,8 @@ sub actionConfig {
 	return $ret;
 }
 
+# START
+
 initializeLogging();
 setDebugMode();
 
@@ -156,16 +155,10 @@ if (readCommandLineParameters())
 }
 
 debug("parameter configFile=$configFile.");
-# $configFile = `ls $configFile`;
-# chomp $configFile if ($configFile);
-# if(-e $configFile && -f _ && -r _ ){
-#    print("File $configFile exists and readable\n");
-# }
 
 my $currentDir=getcwd;
 
 if ( $configFile && ! -f $configFile ){
-	# $configFile="$currentDir/$configFile";
 	debug("configFile=$configFile.");
 	if ( -d $configFile ) {
 		debug("Config File not found at $configFile, but was meant to represent something, attempting concatonation of default config file name.");
@@ -181,7 +174,7 @@ if ( $configFile && ! -f $configFile ){
 
 if ( -f $configFile){
 	debug("Config File found at $configFile.");
-}else{
+} else {
 	error("Config File not found at $configFile");
 	usage();
 	exit 1;
@@ -196,7 +189,7 @@ debug "json=".Dumper($json);
 my $ret = actionConfig($json);
 if ($ret){
 	error ("Failed to Action the configFile found at $configFile successfully.");
-}else{
+} else {
 	debug "Complete";
 }
 exit $ret;

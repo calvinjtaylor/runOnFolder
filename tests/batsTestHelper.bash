@@ -24,7 +24,7 @@ setup() {
 
   export TMP="$BATS_TEST_DIRNAM/tmp"
   export OUT="$BATS_TEST_DIRNAM/output"
-  export CONFNAME=".syncFilesFromBackup.json"
+  export CONFNAME=".runOnDirectories.json"
 
   [ -d "$TMP" ] && rm -rf "$TMP" ; mkdir -p "$TMP"
   [ -d "$OUT" ] && rm -rf "$OUT" ; mkdir -p "$OUT"
